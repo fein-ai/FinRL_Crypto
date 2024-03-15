@@ -18,29 +18,33 @@ all the input DRL agents are analyzed.
 
 import pickle
 import matplotlib.dates as mdates
+import sys
 
+from logbook import Logger, StreamHandler
 from config_main import *
 from function_finance_metrics import *
 from processor_Yahoo import Yahoofinance
 from environment_Alpaca import CryptoEnvAlpaca
 from drl_agents.elegantrl_models import DRLAgent as DRLAgent_erl
 
+StreamHandler(sys.stdout).push_application()
+log = Logger('4_backtest')
 
 def load_validated_model(result):
 
-    with open('./train_results/' + result + '/best_trial', 'rb') as handle:
+    with open(f'{FOLDER_DIR}/train_results/' + result + '/best_trial', 'rb') as handle:
         best_trial = pickle.load(handle)
 
-    print('BEST TRIAL: ', best_trial.number)
+    log.info('BEST TRIAL: {best_trial.number}')
     timeframe = best_trial.user_attrs['timeframe']
     ticker_list = best_trial.user_attrs['ticker_list']
     technical_ind = best_trial.user_attrs['technical_indicator_list']
     net_dim = best_trial.params['net_dimension']
     model_name = best_trial.user_attrs['model_name']
 
-    print('\nMODEL_NAME: ', model_name)
-    print(best_trial.params)
-    print(timeframe)
+    log.info('MODEL_NAME: {model_name}')
+    log.info(best_trial.params)
+    log.info(timeframe)
 
     name_test = best_trial.user_attrs['name_test']
 
@@ -67,8 +71,8 @@ def download_CVIX(trade_start_date, trade_end_date):
 
 
 def load_and_process_data(TIMEFRAME, trade_start_date, trade_end_date):
-    data_folder = f'./data/trade_data/{TIMEFRAME}_{str(trade_start_date[2:10])}_{str(trade_end_date[2:10])}'
-    print(f'\nLOADING DATA FOLDER: {data_folder}\n')
+    data_folder = f'{FOLDER_DIR}/data/trade_data/{TIMEFRAME}_{str(trade_start_date[2:10])}_{str(trade_end_date[2:10])}'
+    log.info(f'LOADING DATA FOLDER: {data_folder}')
     with open(data_folder + '/data_from_processor', 'rb') as handle:
         data_from_processor = pickle.load(handle)
     with open(data_folder + '/price_array', 'rb') as handle:
@@ -91,8 +95,8 @@ def load_and_process_data(TIMEFRAME, trade_start_date, trade_end_date):
 #######################################################################################################
 #######################################################################################################
 
-print('TRADE_START_DATE             ', trade_start_date)
-print('TRADE_END_DATE               ', trade_end_date, '\n')
+log.info('TRADE_START_DATE             ', trade_start_date)
+log.info('TRADE_END_DATE               ', trade_end_date, '\n')
 
 pickle_results = ["res_2023-01-23__16_32_55_model_WF_ppo_5m_3H_20k",
                   "res_2023-01-23__17_07_49_model_KCV_ppo_5m_3H_20005k",
@@ -112,7 +116,7 @@ data_from_processor, price_array, tech_array, time_array, cvix_array, cvix_array
 for count, result in enumerate(pickle_results):
     env_params, net_dim, timeframe, ticker_list, technical_ind, name_test, model_name = load_validated_model(result)
     model_names_list.append(model_name)
-    cwd = './train_results/' + result + '/stored_agent/'
+    cwd = '{FOLDER_DIR}/train_results/' + result + '/stored_agent/'
 
     data_config = {
         "cvix_array": cvix_array,
@@ -255,7 +259,7 @@ ax1.xaxis.set_major_locator(mdates.DayLocator(interval=8))
 ax1.set_ylabel('Cumulative return')
 plt.xlabel('Date')
 plt.legend()
-plt.savefig('./plots_and_metrics/test_cumulative_return.png', bbox_inches='tight')
+plt.savefig('{FOLDER_DIR}/plots_and_metrics/test_cumulative_return.png', bbox_inches='tight')
 ax2.patch.set_edgecolor('black')
 ax2.patch.set_linewidth(3)
 ax2.set_ylabel('CVIX')
@@ -264,4 +268,4 @@ ax1.xaxis.set_major_locator(mdates.DayLocator(interval=8))
 ax1.set_ylabel('Cumulative return')
 plt.xlabel('Date')
 plt.legend()
-plt.savefig('./plots_and_metrics/test_derivative_CVIX.png', bbox_inches='tight')
+plt.savefig('{FOLDER_DIR}/plots_and_metrics/test_derivative_CVIX.png', bbox_inches='tight')
