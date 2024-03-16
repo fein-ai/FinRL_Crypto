@@ -42,8 +42,10 @@ def nCr(n, r):
 #######################################################################################################
 #######################################################################################################
 
-trade_start_date = '2022-04-30 00:00:00'
+trade_start_date = '2022-06-01 00:00:00'
 trade_end_date = '2022-06-27 00:00:00'
+
+FOLDER_DIR="./fein-bucket"
 
 SEED_CFG = 2390408
 TIMEFRAME = '5m'
@@ -54,7 +56,7 @@ NUM_PATHS = 4
 N_GROUPS = NUM_PATHS + 1
 NUMBER_OF_SPLITS = nCr(N_GROUPS, N_GROUPS - K_TEST_GROUPS)
 
-print(NUMBER_OF_SPLITS)
+# print(NUMBER_OF_SPLITS)
 
 no_candles_for_train = 20000
 no_candles_for_val = 5000
@@ -133,5 +135,5 @@ def calculate_start_end_dates(candlewidth):
 
 
 TRAIN_START_DATE, TRAIN_END_DATE, VAL_START_DATE, VAL_END_DATE = calculate_start_end_dates(TIMEFRAME)
-print("TRAIN_START_DATE: ", TRAIN_START_DATE)
-print("VAL_END_DATE: ", VAL_END_DATE)
+# print("TRAIN_START_DATE: ", TRAIN_START_DATE)
+# print("VAL_END_DATE: ", VAL_END_DATE)

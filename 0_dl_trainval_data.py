@@ -19,8 +19,10 @@ the data to the specified file path
 """
 
 import os
+import sys
 import pickle
 
+from logbook import Logger, StreamHandler
 from config_main import (
     TICKER_LIST,
     TIMEFRAME,
@@ -30,21 +32,25 @@ from config_main import (
     TRAIN_START_DATE,
     TRAIN_END_DATE,
     VAL_START_DATE,
-    VAL_END_DATE
+    VAL_END_DATE,
+    FOLDER_DIR
 )
 from processor_Binance import BinanceProcessor
 
+StreamHandler(sys.stdout).push_application()
+log = Logger('0_dl_trainval_data')
 
+log.info('start logging')
 def print_config_variables():
-    print('\n')
-    print('TIMEFRAME:                ', TIMEFRAME)
-    print('no_candles_for_train:     ', no_candles_for_train)
-    print('no_candles_for_val:       ', no_candles_for_val)
-    print('TRAIN_START_DATE:         ', TRAIN_START_DATE)
-    print('TRAIN_END_DATE:           ', TRAIN_END_DATE)
-    print('VAL_START_DATE:           ', VAL_START_DATE)
-    print('VAL_END_DATE:             ', VAL_END_DATE, '\n')
-    print('TICKER LIST:              ', TICKER_LIST, '\n')
+    
+    log.info(f'TIMEFRAME : {TIMEFRAME}')
+    log.info(f'no_candles_for_train : {no_candles_for_train}')
+    log.info(f'no_candles_for_val : {no_candles_for_val}')
+    log.info(f'TRAIN_START_DATE : {TRAIN_START_DATE}')
+    log.info(f'TRAIN_END_DATE : {TRAIN_END_DATE}')
+    log.info(f'VAL_START_DATE : {VAL_START_DATE}' )
+    log.info(f'VAL_END_DATE : {VAL_END_DATE}')
+    log.info(f'TICKER LIST : {TICKER_LIST}')
 
 
 def process_data():
@@ -60,27 +66,28 @@ def process_data():
     return data_from_processor, price_array, tech_array, time_array
 
 
-def save_data(data_folder, data_from_processor, price_array, tech_array, time_array):
-    if not os.path.exists(data_folder):
-        os.mkdir(data_folder)
+# def save_data(data_folder, data_from_processor, price_array, tech_array, time_array):
+#     if not os.path.exists(data_folder):
+#         os.makedirs(data_folder, exist_ok=True)
 
-    with open(data_folder + '/data_from_processor', 'wb') as handle:
-        pickle.dump(data_from_processor, handle, protocol=pickle.HIGHEST_PROTOCOL)
+#     with open(data_folder + '/data_from_processor', 'wb') as handle:
+#         pickle.dump(data_from_processor, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open(data_folder + '/price_array', 'wb') as handle:
-        pickle.dump(price_array, handle, protocol=pickle.HIGHEST_PROTOCOL)
+#     with open(data_folder + '/price_array', 'wb') as handle:
+#         pickle.dump(price_array, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open(data_folder + '/tech_array', 'wb') as handle:
-        pickle.dump(tech_array, handle, protocol=pickle.HIGHEST_PROTOCOL)
+#     with open(data_folder + '/tech_array', 'wb') as handle:
+#         pickle.dump(tech_array, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open(data_folder + '/time_array', 'wb') as handle:
-        pickle.dump(time_array, handle, protocol=pickle.HIGHEST_PROTOCOL)
+#     with open(data_folder + '/time_array', 'wb') as handle:
+#         pickle.dump(time_array, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def save_data_to_disk(data_from_processor, price_array, tech_array, time_array):
-    data_folder = f'./data/{TIMEFRAME}_{no_candles_for_train + no_candles_for_val}'
+    data_folder = f'{FOLDER_DIR}/data/{TIMEFRAME}_{no_candles_for_train + no_candles_for_val}'
     if not os.path.exists(data_folder):
-        os.mkdir(data_folder)
+        log.info (f'mkdir: {data_folder}')
+        os.makedirs(data_folder, exist_ok=True)
     _save_to_disk(data_from_processor, f"{data_folder}/data_from_processor")
     _save_to_disk(price_array, f"{data_folder}/price_array")
     _save_to_disk(tech_array, f"{data_folder}/tech_array")

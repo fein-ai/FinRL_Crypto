@@ -30,7 +30,7 @@ def main_metric_pbo_analysis(x):
 
 
 def load_validated_model(pickle_result):
-    study = joblib.load(f'train_results/{pickle_result}/study.pkl')
+    study = joblib.load(f'{FOLDER_DIR}/train_results/{pickle_result}/study.pkl')
     best_trial_number = study.best_trial.number
     print('BEST TRIAL: ', best_trial_number)
 
@@ -158,4 +158,4 @@ plt.axvline(0, c="r", ls="--", linewidth=3)
 plt.legend(frameon=False, ncol=len(model_names), loc='upper right', bbox_to_anchor=(1, 1.17), fontsize=22)
 ax.set(xlabel="Logits")
 ax.set(ylabel="Distribution (%)")
-plt.savefig("./plots_and_metrics/multiple_logits_dist", bbox_inches='tight')
+plt.savefig(f"{FOLDER_DIR}/plots_and_metrics/multiple_logits_dist", bbox_inches='tight')

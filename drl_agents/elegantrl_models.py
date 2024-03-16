@@ -1,6 +1,7 @@
 # RL models from elegantrl
 import torch
 import numpy as np
+from logbook import Logger
 from train.config import Arguments
 from train.run import train_and_evaluate, init_agent
 
@@ -35,6 +36,7 @@ class DRLAgent:
     """
 
     def __init__(self, env, price_array, tech_array, env_params, if_log):
+        self.log = Logger(self.__class__.__name__)
         self.env = env
         self.price_array = price_array
         self.tech_array = tech_array
@@ -131,6 +133,6 @@ class DRLAgent:
                 episode_returns.append(episode_return)
                 if done:
                     break
-        print("\n Test Finished!")
-        print("episode_return: ", episode_return - 1, '\n')
+        Logger('DRL_prediction').info("Test Finished!")
+        Logger('DRL_prediction').info(f"episode_return: {episode_return - 1}")
         return episode_total_assets

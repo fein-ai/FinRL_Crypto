@@ -26,24 +26,30 @@ module."""
 
 
 import os
+import sys
 import pickle
+from logbook import Logger, StreamHandler
 
 from processor_Binance import BinanceProcessor
-from config_main import TICKER_LIST, TECHNICAL_INDICATORS_LIST, TIMEFRAME, trade_start_date, trade_end_date, no_candles_for_train
+from config_main import TICKER_LIST, TECHNICAL_INDICATORS_LIST, TIMEFRAME, trade_start_date, trade_end_date, no_candles_for_train, FOLDER_DIR
 
+StreamHandler(sys.stdout).push_application()
+log = Logger('0_dl_trade_data')
 
 def main():
+    
+    log.info('start logging')
     print_config_variables()
     data_from_processor, price_array, tech_array, time_array = process_data()
     save_data_to_disk(data_from_processor, price_array, tech_array, time_array)
 
 
 def print_config_variables():
-    print('\n')
-    print('TIMEFRAME                  ', TIMEFRAME)
-    print('TRADE_START_DATE           ', trade_start_date)
-    print('TRADE_END_DATA             ', trade_end_date)
-    print('TICKER LIST                ', TICKER_LIST, '\n')
+    log.info('\n')
+    log.info(f'TIMEFRAME : { TIMEFRAME}')
+    log.info(f'TRADE_START_DATE : {trade_start_date} ')
+    log.info(f'TRADE_END_DATA : {trade_end_date}')
+    log.info(f'TICKER LIST : {TICKER_LIST}')
 
 
 def process_data():
@@ -53,9 +59,10 @@ def process_data():
 
 
 def save_data_to_disk(data_from_processor, price_array, tech_array, time_array):
-    data_folder = f'./data/trade_data/{TIMEFRAME}_{str(trade_start_date[2:10])}_{str(trade_end_date[2:10])}'
+    data_folder = f'{FOLDER_DIR}/trade_data/{TIMEFRAME}_{str(trade_start_date[2:10])}_{str(trade_end_date[2:10])}'
     if not os.path.exists(data_folder):
-        os.mkdir(data_folder)
+        log.info (f'mkdir: {data_folder}')
+        os.makedirs(data_folder, exist_ok=True)
     _save_to_disk(data_from_processor, f"{data_folder}/data_from_processor")
     _save_to_disk(price_array, f"{data_folder}/price_array")
     _save_to_disk(tech_array, f"{data_folder}/tech_array")

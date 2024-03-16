@@ -20,3 +20,4 @@ torch==1.9.1
 tqdm==4.63.0
 trading_calendars==2.1.1
 yfinance==0.1.63
+logbook==1.7.0

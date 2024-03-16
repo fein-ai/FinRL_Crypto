@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from logbook import Logger
 from abc import abstractmethod
 from typing import Iterable, Tuple, List
 
@@ -25,6 +26,7 @@ class BaseTimeSeriesCrossValidator:
         Number of folds. Must be at least 2.
     """
     def __init__(self, n_splits=10):
+        self.log = Logger(self.__class__.__name__)
         if not isinstance(n_splits, numbers.Integral):
             raise ValueError(f"The number of folds must be of Integral type. {n_splits} of type {type(n_splits)}"
                              f" was passed.")
@@ -289,8 +291,8 @@ def back_test_paths_generator(X, y, cv, t_span, n, k, prediction_times, evaluati
     n_paths = C_nk * k // n
 
     if verbose:
-        print('n_sim:', C_nk)
-        print('n_paths:', n_paths)
+        self.log.info('n_sim:', C_nk)
+        self.log.info('n_paths:', n_paths)
 
     # is_test is a T x C(n, k) array where each column is a logical array
     # indicating which observation in in the test set
@@ -340,9 +342,9 @@ def plot_cv_indices(cv, X, y, group, ax, n_paths, k, paths, prediction_times,  e
     # Generate the training/testing visualizations for each CV split
     for ii, (tr, tt) in enumerate(cv.split(X, y, pred_times=prediction_times, eval_times=evaluation_times)):
 
-        # print('fold', ii, '\n')
-        # print(tr, '\n')
-        # print(tt, '\n')
+        # self.log.info('fold', ii, '\n')
+        # self.log.info(tr, '\n')
+        # self.log.info(tt, '\n')
 
         # Fill in indices with the training/test groups
         indices = np.array([np.nan] * len(X))

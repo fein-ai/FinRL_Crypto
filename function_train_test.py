@@ -21,12 +21,16 @@ and the equal-weighted portfolio, as well as the returns for the DRL agent.
 """
 
 import numpy as np
+import sys
+
+from logbook import Logger, StreamHandler
 from drl_agents.elegantrl_models import DRLAgent as DRLAgent_erl
 from processor_Binance import BinanceProcessor
 from function_finance_metrics import (compute_data_points_per_year,
                                       compute_eqw,
                                       sharpe_iid)
-
+StreamHandler(sys.stdout).push_application()
+log = Logger('function_train_test')
 
 def train_and_test(trial, price_array, tech_array, train_indices, test_indices, env, model_name, env_params, erl_params,
                    break_step, cwd, gpu_id):
@@ -54,7 +58,7 @@ def train_and_test(trial, price_array, tech_array, train_indices, test_indices, 
 
 def train_agent(price_array, tech_array, train_indices, env, model_name, env_params, erl_params, break_step, cwd,
                 gpu_id):
-    print('No. Train Samples:', len(train_indices), '\n')
+    log.info(f'No. Train Samples: {len(train_indices)}')
     price_array_train = price_array[train_indices, :]
     tech_array_train = tech_array[train_indices, :]
 
@@ -76,7 +80,7 @@ def train_agent(price_array, tech_array, train_indices, env, model_name, env_par
 
 
 def test_agent(price_array, tech_array, test_indices, env, env_params, model_name, cwd, gpu_id, erl_params, trial):
-    print('\nNo. Test Samples:', len(test_indices))
+    log.info(f'No. Test Samples: {len(test_indices)}')
     price_array_test = price_array[test_indices, :]
     tech_array_test = tech_array[test_indices, :]
 

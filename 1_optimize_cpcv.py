@@ -40,11 +40,15 @@ import pickle
 import os
 import sys
 
+from logbook import Logger, StreamHandler
 from distutils.dir_util import copy_tree
 from environment_Alpaca import CryptoEnvAlpaca
 from function_CPCV import *
 from function_train_test import *
 from config_main import *
+
+StreamHandler(sys.stdout).push_application()
+log = Logger('1_optimize_cpcv')
 
 
 class bcolors:
@@ -60,22 +64,22 @@ class bcolors:
 
 
 def print_config():
-    print('\n' + bcolors.HEADER + '##### Launched hyperparameter optimization with CPCV  #####' + bcolors.ENDC + '\n')
-    print('TIMEFRAME                  ', TIMEFRAME)
-    print('TRAIN SAMPLES              ', no_candles_for_train)
-    print('TRIALS NO.                 ', H_TRIALS)
-    print('N                          ', N_GROUPS)
-    print('K test groups              ', K_TEST_GROUPS)
-    print('SPLITS                     ', NUMBER_OF_SPLITS)
+    log.info( bcolors.HEADER + '##### Launched hyperparameter optimization with CPCV  #####' + bcolors.ENDC)
+    log.info(f'TIMEFRAME                  {TIMEFRAME}')
+    log.info(f'TRAIN SAMPLES              {no_candles_for_train}')
+    log.info(f'TRIALS NO.                 {H_TRIALS}')
+    log.info(f'N                          {N_GROUPS}')
+    log.info(f'K test groups              {K_TEST_GROUPS}')
+    log.info(f'SPLITS                     {NUMBER_OF_SPLITS}')
 
-    print('\n')
-    print('TRAIN SAMPLES              ', no_candles_for_train)
-    print('VAL_SAMPLES                ', no_candles_for_val)
-    print('TRAIN_START_DATE           ', TRAIN_START_DATE)
-    print('TRAIN_END_DATE             ', TRAIN_END_DATE)
-    print('VAL_START_DATE             ', VAL_START_DATE)
-    print('VAL_END_DATE               ', VAL_END_DATE, '\n')
-    print('TICKER LIST                ', TICKER_LIST, '\n')
+    
+    log.info(f'TRAIN SAMPLES              {no_candles_for_train}')
+    log.info(f'VAL_SAMPLES                {no_candles_for_val}')
+    log.info(f'TRAIN_START_DATE           {TRAIN_START_DATE}')
+    log.info(f'TRAIN_END_DATE             {TRAIN_END_DATE}')
+    log.info(f'VAL_START_DATE             {VAL_START_DATE}')
+    log.info(f'VAL_END_DATE               {VAL_END_DATE}')
+    log.info(f'TICKER LIST                {TICKER_LIST}')
     res_timestamp = 'res_' + str(datetime.now().strftime("%Y-%m-%d__%H_%M_%S"))
     return res_timestamp
 
@@ -98,19 +102,19 @@ def save_best_agent(study, trial):
     if study.best_trial.number != trial.number:
         return
 
-    print('\n' + bcolors.OKGREEN + 'Found new best agent!' + bcolors.ENDC + '\n')
+    log.info( bcolors.OKGREEN + 'Found new best agent!' + bcolors.ENDC )
 
     # Copy agent from workdir and save in result folder
     name_folder = trial.user_attrs['name_folder']
     name_test = trial.user_attrs['name_test']
-    from_directory = f"./train_results/cwd_tests/{name_test}/"
-    to_directory = f"./train_results/{name_folder}/stored_agent/"
+    from_directory = f"{FOLDER_DIR}/train_results/cwd_tests/{name_test}/"
+    to_directory = f"{FOLDER_DIR}/train_results/{name_folder}/stored_agent/"
 
     os.makedirs(to_directory, exist_ok=True)
     copy_tree(from_directory, to_directory)
 
     # Dump trial in pickle file to avoid error where params arre not copied
-    with open(f"./train_results/{name_folder}/best_trial", "wb") as handle:
+    with open(f"{FOLDER_DIR}/train_results/{name_folder}/best_trial", "wb") as handle:
         pickle.dump(trial, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -152,12 +156,14 @@ def set_pickle_attributes(trial, model_name, TIMEFRAME, TRAIN_START_DATE, TRAIN_
     trial.set_user_attr("technical_indicator_list", TECHNICAL_INDICATORS_LIST)
     trial.set_user_attr("name_folder", name_folder)
     trial.set_user_attr("name_test", name_test)
-    joblib.dump(study, f'train_results/{name_folder}/' + 'study.pkl')
+    joblib.dump(study, f'{FOLDER_DIR}/train_results/{name_folder}/' + 'study.pkl')
 
 
 def load_saved_data(TIMEFRAME, no_candles_for_train):
-    data_folder = './data/' + TIMEFRAME + '_' + str(no_candles_for_train + no_candles_for_val)
-    print('\nLOADING DATA FOLDER: ', data_folder, '\n')
+    
+    data_folder = FOLDER_DIR + '/data/' + TIMEFRAME + '_' + str(no_candles_for_train + no_candles_for_val)
+    
+    log.info(f'LOADING DATA FOLDER: {data_folder}')
     with open(data_folder + '/data_from_processor', 'rb') as handle:
         data_from_processor = pickle.load(handle)
     with open(data_folder + '/price_array', 'rb') as handle:
@@ -170,7 +176,7 @@ def load_saved_data(TIMEFRAME, no_candles_for_train):
 
 
 def write_logs(name_folder, model_name, trial, cwd, erl_params, env_params, num_paths, n_total_groups, n_splits):
-    path_logs = './train_results/' + name_folder + '/logs.txt'
+    path_logs = FOLDER_DIR + '/train_results/' + name_folder + '/logs.txt'
     with open(path_logs, 'a') as f:
         f.write('\n' + 'MODEL NAME: ' + model_name + '\n')
         f.write('TRIAL NUMBER: ' + str(trial.number) + '\n')
@@ -314,12 +320,12 @@ def optimize(name_test, model_name, gpu_id):
     # Auto naming
     res_timestamp = print_config()
     name_test = f"{name_test}_CPCV_{model_name}_{TIMEFRAME}_{H_TRIALS}H_{round((no_candles_for_train + no_candles_for_val) / 1000)}k"
-    cwd = f"./train_results/cwd_tests/{name_test}"
-    path = f"./train_results/{res_timestamp}_{name_test}/"
+    cwd = f"{FOLDER_DIR}/train_results/cwd_tests/{name_test}"
+    path = f"{FOLDER_DIR}/train_results/{res_timestamp}_{name_test}/"
     if not os.path.exists(path):
-        os.mkdir(path)
+        os.makedirs(path, exist_ok=True)
 
-    with open(f"./train_results/{res_timestamp}_{name_test}/logs.txt", "w") as f:
+    with open(f"{FOLDER_DIR}/train_results/{res_timestamp}_{name_test}/logs.txt", "w") as f:
         f.write(f"##################################  || {model_name} || ##################################")
 
     global study
@@ -352,9 +358,9 @@ gpu_id = 0
 name_model = 'ppo'
 name_test = 'model'
 
-print('\nStarting CPCV optimization with:')
-print('drl algorithm:       ', name_model)
-print('name_test:           ', name_test)
-print('gpu_id:              ', gpu_id, '\n')
+log.info('Starting CPCV optimization with:')
+log.info(f"drl algorithm: {name_model}")
+log.info(f"name_test: {name_test}")
+log.info(f'gpu_id: {gpu_id}')
 
 optimize(name_test, name_model, gpu_id)

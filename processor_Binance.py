@@ -42,9 +42,11 @@ get_TALib_features_for_each_coin method is used to calculate technical indicator
 import pandas as pd
 from datetime import datetime
 import numpy as np
+
 from binance.client import Client
 from talib import RSI, MACD, CCI, DX, ROC, ULTOSC, WILLR, OBV, HT_DCPHASE
 
+from logbook import Logger
 from config_api import *
 import datetime as dt
 from processor_Yahoo import Yahoofinance
@@ -54,6 +56,7 @@ binance_client = Client(api_key=API_KEY_BINANCE, api_secret=API_SECRET_BINANCE)
 
 class BinanceProcessor():
     def __init__(self):
+        self.log = Logger(self.__class__.__name__)
         self.end_date = None
         self.start_date = None
         self.tech_indicator_list = None
@@ -65,9 +68,9 @@ class BinanceProcessor():
     def run(self, ticker_list, start_date, end_date, time_interval, technical_indicator_list, if_vix):
         self.start_date = start_date
         self.end_date = end_date
-        print('Downloading data from Binance...')
+        self.log.info('Downloading data from Binance...')
         data = self.download_data(ticker_list, start_date, end_date, time_interval)
-        print('Downloading finished! Transforming data...')
+        self.log.info('Downloading finished! Transforming data...')
         data = self.clean_data(data)
         data = data.drop(columns=['time'])
         data['timestamp'] = self.servertime_to_datetime(data['timestamp'])
@@ -107,7 +110,7 @@ class BinanceProcessor():
         return final_df
 
     def frac_diff_features(self, array):
-        print('Differentiating tech array...')
+        self.log.info('Differentiating tech array...')
         array = FracdiffStat().fit_transform(array)
         return array
 
@@ -133,15 +136,15 @@ class BinanceProcessor():
         to_drop = [column for column in upper_tri.columns if any(upper_tri[column] > self.correlation_threshold)]
 
         to_drop.remove('close')
-        print('according to analysis, drop: ', to_drop)
+        self.log.info('according to analysis, drop: ', to_drop)
         real_drop = ['high', 'low', 'open', 'macd', 'cci', 'roc', 'willr']
-        print('dropping for model consistency: ', real_drop)
+        self.log.info('dropping for model consistency: ', real_drop)
 
         df_uncorrelated = df.drop(real_drop, axis=1)
         return df_uncorrelated
 
     def add_turbulence(self, df):
-        print('Turbulence not supported yet. Return original DataFrame.')
+        self.log.info('Turbulence not supported yet. Return original DataFrame.')
 
         return df
 
@@ -159,7 +162,7 @@ class BinanceProcessor():
     def df_to_array(self, df, if_vix):
         self.tech_indicator_list = list(df.columns)
         self.tech_indicator_list.remove('tic')
-        print('adding technical indiciators (no:', len(self.tech_indicator_list), ') :', self.tech_indicator_list)
+        self.log.info('adding technical indiciators (no:', len(self.tech_indicator_list), ') :', self.tech_indicator_list)
 
         unique_ticker = df.tic.unique()
         if_first_time = True

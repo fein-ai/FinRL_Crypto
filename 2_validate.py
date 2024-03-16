@@ -8,12 +8,13 @@ import joblib
 from function_finance_metrics import *
 import os
 import scipy.stats as stats
+from config_main import *
 
 
 class StudyAnalyzer:
     def __init__(self, pickle_result: str):
         self.pickle_result = pickle_result
-        self.study = joblib.load(f'train_results/{pickle_result}/study.pkl')
+        self.study = joblib.load(f'{FOLDER_DIR}/train_results/{pickle_result}/study.pkl')
         self.best_trial = self.study.best_trial
 
         self.image_path = 'plots_and_metrics'
